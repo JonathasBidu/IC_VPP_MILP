@@ -54,11 +54,11 @@ O programa implementado aqui resolve esse problema utilizando **algoritmos gené
 ## 🔗 **Repositórios Relacionados**  
 Este projeto é a terceira etapa de uma pesquisa mais ampla sobre **otimização de despacho de Recursos Energéticos Distribuídos (REDs)**. As etapas anteriores exploraram diferentes abordagens para a modelagem e solução do problema:  
 
-1. **[Abordagem Determinística](URL_DO_REPOSITORIO)**  
+1. **[Abordagem Determinística](https://github.com/JonathasBidu/IC_VPP_DETERMINISTC.git)**  
    - Formulação do problema como um modelo determinístico, assumindo **dados conhecidos e sem incertezas**.  
    - Otimização do despacho utilizando programação matemática clássica.  
 
-2. **[Abordagem Estocástica de Dois Níveis](URL_DO_REPOSITORIO)**  
+2. **[Abordagem Estocástica de Dois Níveis](https://github.com/JonathasBidu/IC_VPP_ESTOCASTIC.git)**  
    - Introdução da **incerteza na geração e no consumo** através de um modelo estocástico.  
    - Estrutura de dois níveis, onde um nível superior coordena a operação considerando previsões probabilísticas.  
 
