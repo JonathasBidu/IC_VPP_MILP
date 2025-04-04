@@ -59,7 +59,7 @@ def ieq_constr(x: np.ndarray, data: dict)-> np.ndarray[np.ndarray]:
     Nbat = data['Nbat'] # Quantidade de armazenadores 
     # Mimp = data['Mimp'] # Constante de importação
     # Mexp = data['Mexp'] # Constante de esportação
-    M = 1e5 # Valor provisório de Mimp e Mexp
+    M = 10 # Valor provisório de Mimp e Mexp
     Mimp = M # Provisório
     Mexp = M # Provisório
     alpha_bm = data['kappa_bm'] # Variáveis de custo das UBTMs

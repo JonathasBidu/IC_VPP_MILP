@@ -82,8 +82,8 @@ def solver(data: dict):
                         )
     
     # Definindo o algoritmo 
-    algorithm = GA(pop_size = 250)
-    termination = ('n_gen', 5)
+    algorithm = GA(pop_size = 50)
+    termination = ('n_gen', 500)
 
     # Obtendo a solução
     # res = minimize(problem, algorithm, termination, verbose = True, seed = 1)

@@ -87,7 +87,7 @@ def obj_function(x: np.ndarray, data: dict)-> np.float64:
     # Cálculo do custo operacional das UBTMs
     for t in range(Nt):
         for i in range(Nbm):
-            Cbm += gamma_bm[i, t] * kappa_bm[i]
+            Cbm += gamma_bm[i, t]
 
     # Cálculo do custo de partida/parada das UBTMs
     for t in range(1, Nt):
