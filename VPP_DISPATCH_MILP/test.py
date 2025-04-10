@@ -60,21 +60,21 @@ def solver(data: dict):
     # Máscara para tipos de variáveis
     mask = ["real"] * Nr + ["int"] * Ni
 
-    # Operadores para GA com variáveis mistas
-    sampling = MixedVariableSampling(mask, {
-        "real": FloatRandomSampling(),
-        "int": IntegerRandomSampling()
-    })
+    # # Operadores para GA com variáveis mistas
+    # sampling = MixedVariableSampling(mask, {
+    #     "real": FloatRandomSampling(),
+    #     "int": IntegerRandomSampling()
+    # })
 
-    crossover = MixedVariableCrossover(mask, {
-        "real": SBX(eta=15, prob=0.9),
-        "int": SBX(eta=15, prob=0.9)
-    })
+    # crossover = MixedVariableCrossover(mask, {
+    #     "real": SBX(eta=15, prob=0.9),
+    #     "int": SBX(eta=15, prob=0.9)
+    # })
 
-    mutation = MixedVariableMutation(mask, {
-        "real": PM(eta=20),
-        "int": PM(eta=20)
-    })
+    # mutation = MixedVariableMutation(mask, {
+    #     "real": PM(eta=20),
+    #     "int": PM(eta=20)
+    # })
 
     # Criando classe do problema
     class MyProblem(ElementwiseProblem):
