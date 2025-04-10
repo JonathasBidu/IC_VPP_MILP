@@ -68,7 +68,7 @@ def bounds(data: dict)-> tuple[np.ndarray]:
     # Calculando a potência instalada no instante t no período da simulação Nt
     p_inst = np.zeros(Nt) # Vetor de potência instalada em cada instante t
     for t in range(Nt):
-        p_inst[t] = np.sum(p_pv[:, t]) + np.sum(p_wt[:, t]) + np.max(soc_max)
+        p_inst[t] = np.sum(p_pv[:, t]) + np.sum(p_wt[:, t]) + np.max(soc_max) + np.max(p_bm_max)
 
     # Calculando a carga demandada no instante t no período da simulação Nt
     demanded_load = np.zeros(Nt) # Vetor de carga demandada em cada instante t

@@ -77,83 +77,83 @@ def ieq_constr(x: np.ndarray, data: dict)-> np.ndarray[np.ndarray]:
     
     Nimpc = Nt # Quantidade de restrições de desigaualdade de importação
     imp_constr = np.zeros(Nimpc) # Vetor de restrições de desigualdade de importação da VPP (imp_constr - import constraints)
-    # Definindo as restrições de desigualdade de importação da VPP: (1- u_exp[t]) * Mimp - p_imp[t] >= 0
+    # Definindo as restrições de desigualdade de importação da VPP: p_imp[t] - (1 - u_exp[t]) * Mimp <= 0
     for t in range(Nt):
-        imp_constr[t] = (1- u_exp[t]) * Mimp - p_imp[t]
+        imp_constr[t] = p_imp[t] - (1 - u_exp[t]) * Mimp
 
     Nexpc = Nt # Quantidade de restrições de desigaualdade de exportação
     exp_constr = np.zeros(Nexpc) # Vetor de restrições de desigualdade de expportação da VPP (exp_constr - export constraints)
-    # Calculando as restrições de desigualdade de exportação da VPP: (1- u_imp[t]) * Mexp - p_exp[t] >= 0
+    # Calculando as restrições de desigualdade de exportação da VPP: p_exp[t] - (1- u_imp[t]) * Mexp <= 0
     for t in range(Nt):
-        exp_constr[t] = (1- u_imp[t]) * Mexp - p_exp[t]
+        exp_constr[t] = p_exp[t] - (1- u_imp[t]) * Mexp
     
     Nbmc = (Nbm * Nt) + (Nbm * Nt) + (Nbm * Nt) + (Nbm * (Nt - 1)) + (Nbm * (Nt - 1)) # Quantidade de restrições de desigualdade das UBTMs
     bm_constr = np.zeros(Nbmc) # Vetor de restrições de desigualdade das UBTMs (bm_constraints)
     k = 0
-    # Calculando as restrições de desigualdade das UBTMs da VPP: gamma_bm[i, t] - alpha_bm[i] * p_bm[i, t] - beta_bm[i] >= 0
+    # Calculando as restrições de desigualdade das UBTMs da VPP: alpha[i] * p_bm[i, t] + beta[i] - gamma_bm[i, t] <= 0
     for t in range(Nt):
         for i in range(Nbm):
-            bm_constr[k] = gamma_bm[i, t] - alpha_bm[i] * p_bm[i, t] - beta_bm[i]
+            bm_constr[k] = alpha_bm[i] * p_bm[i, t] + beta_bm[i] - gamma_bm[i, t]
             k += 1
     
-    # Calculando a potência mínima das UBTMs: p_bm[i, t] - p_bm_min[i] * u_bm[i, t] >= 0
+    # Calculando a potência mínima das UBTMs: p_bm_min[i] * u_bm[i, t] - p_bm[i, t] <= 0
     for t in range(Nt):
         for i in range(Nbm):
-            bm_constr[k] = p_bm[i, t] - p_bm_min[i] * u_bm[i, t]
+            bm_constr[k] = p_bm_min[i] * u_bm[i, t] - p_bm[i, t]
             k += 1
 
-    # Calculando a potência máxima das UBTMs: p_bm_max[i] * u_bm[i, t] - p_bm[i, t] >= 0
+    # Calculando a potência máxima das UBTMs: p_bm[i, t] - p_bm_max[i] * u_bm[i, t] <= 0
     for t in range(Nt):
         for i in range(Nbm):
-            bm_constr[k] = p_bm_max[i] * u_bm[i, t] - p_bm[i, t]
+            bm_constr[k] = p_bm[i, t] - p_bm_max[i] * u_bm[i, t]
             k += 1
 
-    # Calculando a potência subida das UBTMs: p_bm_rup[i] + p_bm[i, t - 1] - p_bm[i, t] >= 0
+    # Calculando a potência subida das UBTMs: p_bm[i, t] - p_bm[i, t - 1] - p_bm_rup[i] <= 0
     for t in range(1, Nt):
         for i in range(Nbm):
-            bm_constr[k] = p_bm_rup[i] + p_bm[i, t - 1] - p_bm[i, t]
+            bm_constr[k] = p_bm[i, t] - p_bm[i, t - 1] * p_bm_rup[i]
             k += 1
 
-    # Calculando a potência descida das UBTMs: p_bm_rdown[i] + p_bm[i, t] - p_bm[i, t - 1] >= 0
+    # Calculando a potência descida das UBTMs: p_bm[i, t - 1] - p_bm[i, t] - p_bm_rdonw[i] >= 0
     for t in range(1, Nt):
         for i in range(Nbm):
-            bm_constr[k] = p_bm_rdown[i] + p_bm[i, t] - p_bm[i, t - 1]
+            bm_constr[k] =  p_bm[i, t - 1] - p_bm[i, t] - p_bm_rdown[i]
             k += 1
 
     Nbatc = (Nbat * Nt) + (Nbat * Nt) + (Nbat * Nt) # Quantidade de restrições de desigualdade dos armazenadores
     bat_constr =  np.zeros(Nbatc) # Vetor de restrições de desigualdade dos armazendores (bat_constr - batery constraints)
     k = 0
-    # Calculando as restrições de carregamento máximo dos armazenadores: p_bat_max[i] * u_chg[i, t] - p_chg[i, t] >= 0
+    # Calculando as restrições de carregamento máximo dos armazenadores: p_chg[i, t] - p_bat_max[i] * u_chg[i, t] <= 0
     for t in range(Nt):
         for i in range(Nbat):
-            bat_constr[k] = p_bat_max[i] * u_chg[i, t] - p_chg[i, t]
+            bat_constr[k] = p_chg[i, t] - p_bat_max[i] * u_chg[i, t]
             k += 1
 
-    # Calculando as restrições de descarregamento máximo dos armazenadores: p_bat_max[i] * u_dch[i, t] - p_dh[i, t] >= 0
+    # Calculando as restrições de descarregamento máximo dos armazenadores: p_dch[i, t] - p_bat_max[i] * u_dch[i, t] <= 0
     for t in range(Nt):
         for i in range(Nbat):
-            bat_constr[k] = p_bat_max[i] * u_dch[i, t] - p_dch[i, t]
+            bat_constr[k] = p_dch[i, t] - p_bat_max[i] * u_dch[i, t]
             k += 1
 
-    # Calculando as restrições de simultaneidade do estado dos armazenadores: 1 - u_chg[i, t] - u_dch[i, t] >= 0
+    # Calculando as restrições de simultaneidade do estado dos armazenadores: u_chg[i, t] + u_dch[i, t] - 1 <= 0
     for t in range(Nt):
         for i in range(Nbat):
-            bat_constr[k] =  1 - u_chg[i, t] - u_dch[i, t]
+            bat_constr[k] = u_chg[i, t] + u_dch[i, t] - 1 
             k += 1
     
     Ndlc = (Ndl * Nt) + (Ndl * Nt) # Quantidade de restrições de desigualdade das cargas despacháveis
     dl_constr = np.zeros(Ndlc) # Vetor de restrições de desigualdade das cargas despacháveis (dl_constr - dload constraints)
     k = 0
-    # Calculando as restrições de potência mínima das cargas despacháveis: p_dl[i, t] - p_dl_min[i] * u_dl[i, t] >= 0
+    # Calculando as restrições de potência mínima das cargas despacháveis: p_dl_min[i, t] * u_dl[i, t] - p_dl[i, t] <= 0
     for t in range(Nt):
         for i in range(Ndl):
-            dl_constr[k] = p_dl[i, t] - p_dl_min[i, t] * u_dl[i, t]
+            dl_constr[k] = p_dl_min[i, t] * u_dl[i, t] - p_dl[i, t]
             k += 1
 
-    # Calculando as restrições de potência máxima das cargas despacháveis: p_dl_max[i] * u_dl[i, t] - p_dl[i, t] >= 0
+    # Calculando as restrições de potência máxima das cargas despacháveis: p_dl[i, t] - p_dl_max[i, t] * u_dl[i, t] <= 0
     for t in range(Nt):
         for i in range(Ndl):
-            dl_constr[k] = p_dl_max[i, t] * u_dl[i, t] - p_dl[i, t]
+            dl_constr[k] = p_dl[i, t] - p_dl_max[i, t] * u_dl[i, t]
             k += 1
 
     # Vetor com todas as restrições de desigualdade da VPP

@@ -55,7 +55,7 @@ def eq_constr(x: np.ndarray, data: dict)-> np.ndarray:
     pwr_blc_constr = np.zeros(Npbc) # Vetor de restrição de igualdade do balanço de potência da VPP (pwr_blc_contr - power balance constraints)
     # Calculando as restrições de balanço de potência:
     for t in range(Nt):
-        pwr_blc_constr[t] = - (p_exp[t] +
+        pwr_blc_constr[t] = (- p_exp[t] +
                       np.sum(p_wt[:, t]) +
                       np.sum(p_pv[:, t]) +
                       np.sum(p_bm[:, t]) +

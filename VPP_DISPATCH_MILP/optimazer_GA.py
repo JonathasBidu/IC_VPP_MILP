@@ -82,8 +82,8 @@ def solver(data: dict):
                         )
     
     # Definindo o algoritmo 
-    algorithm = GA(pop_size = 50)
-    termination = ('n_gen', 500)
+    algorithm = GA(pop_size = 30)
+    termination = ('n_gen', 100)
 
     # Obtendo a solução
     # res = minimize(problem, algorithm, termination, verbose = True, seed = 1)
@@ -95,6 +95,11 @@ def solver(data: dict):
 
     res = minimize(ConstraintsAsPenalty(problem, penalty = 100.0), algorithm, termination, seed = 1, verbose = True)
     res = Evaluator().eval(problem, Individual(X = res.X))
+
+    # print("\nFunção Objetivo:", res.F)
+    # print("\nViolação de desigualdade (G):", res.G)
+    # print("\nViolação de igualdade (H):", res.H)
+
 
     return res
 
