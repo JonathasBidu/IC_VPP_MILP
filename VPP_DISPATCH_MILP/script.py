@@ -74,15 +74,17 @@ if x is not None:
     soc_constr = G[begin: end]
     # soc_constr = (soc_constr < 0)
 
-    print(f'\nBalanço de potência\n{pwr_blc_contr}\n')
-    print(f'\nNão simultaneidade\n{simult_constr}\n')
-    print(f'\nEstado de carga\n{soc_constr}\n')
+    # print(f'\nBalanço de potência\n{pwr_blc_contr}\n')
+    # print(f'\nNão simultaneidade\n{simult_constr}\n')
+    # print(f'\nEstado de carga\n{soc_constr}\n')
 
     # Visualizando o despacho otimizado da VPP
-    # # plot(data)
-    # print('\n')
-    # print(f'O lucro dessa simulação foi de aproximadamente {res.F[0]:.2f}\n')
-    # print(f'O total de violações dessa simulação foi de {res.CV[0]:.2f}\n')
+    plot(data)
+    print('\n')
+    print(f'O lucro dessa simulação foi de aproximadamente {res.F[0]:.2f}\n')
+    print(f'O total de violações dessa simulação foi de {res.CV[0]:.2f}\n')
 
+    print(f'\nu_imp {data['u_imp']}\n')
+    print(f'u_exp {data['u_exp']}')
 else:
     print('Não foi encontrado solução para essa simulação')

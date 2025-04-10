@@ -71,6 +71,12 @@ def obj_function(x: np.ndarray, data: dict)-> np.float64:
     # Decompondo o vetor x em variáveis de decisão
     p_exp, p_imp, p_bm, gamma_bm, p_chg, p_dch, soc, p_dl, u_exp, u_imp, u_bm, u_chg, u_dch, u_dl = decompose(x, data)
 
+    u_exp = np.float64(u_exp > 0.5)
+    u_imp = np.float64(u_imp > 0.5)
+    u_chg = np.float64(u_chg > 0.5)
+    u_dch = np.float64(u_dch > 0.5)
+    u_dl = np.float64(u_dl > 0.5)
+
     # Cálculo de receita gerada pela VPP (R) em cada instante de tempo t no período Nt da simulação
     R = 0
     for t in range(Nt):
