@@ -74,6 +74,12 @@ def ieq_constr(x: np.ndarray, data: dict)-> np.ndarray[np.ndarray]:
 
     # Decompondo a população inicial em variáveis de decisão para teste
     p_exp, p_imp, p_bm, gamma_bm, p_chg, p_dch, soc, p_dl, u_exp, u_imp, u_bm, u_chg, u_dch, u_dl = decompose(x, data)
+
+    u_exp = np.float64(u_exp > 0.5)
+    u_imp = np.float64(u_imp > 0.5)
+    u_chg = np.float64(u_chg > 0.5)
+    u_dch = np.float64(u_dch > 0.5)
+    u_dl = np.float64(u_dl > 0.5)
     
     Nimpc = Nt # Quantidade de restrições de desigaualdade de importação
     imp_constr = np.zeros(Nimpc) # Vetor de restrições de desigualdade de importação da VPP (imp_constr - import constraints)

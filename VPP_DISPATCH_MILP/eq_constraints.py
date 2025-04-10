@@ -50,6 +50,12 @@ def eq_constr(x: np.ndarray, data: dict)-> np.ndarray:
 
     # Variáveis de decisão:
     p_exp, p_imp, p_bm, gamma_bm, p_chg, p_dch, soc, p_dl, u_exp, u_imp, u_bm, u_chg, u_dch, u_dl = decompose(x, data)
+
+    u_exp = np.float64(u_exp > 0.5)
+    u_imp = np.float64(u_imp > 0.5)
+    u_chg = np.float64(u_chg > 0.5)
+    u_dch = np.float64(u_dch > 0.5)
+    u_dl = np.float64(u_dl > 0.5)
     
     Npbc = Nt # Quantidade de restrições de igualdade de balanço de potência
     pwr_blc_constr = np.zeros(Npbc) # Vetor de restrição de igualdade do balanço de potência da VPP (pwr_blc_contr - power balance constraints)
@@ -69,7 +75,7 @@ def eq_constr(x: np.ndarray, data: dict)-> np.ndarray:
     simul_constr = np.zeros(Nsimc) # Vetor de restrições de igualdades de simultaneidade do estado de impotação/exportação (simul_constr - simultaneity constraints)
     # Calculando as restrições de simultaneidade em cada instante t no período da simulação Nt: u_exp[t] + u_imp[t] - 1 = 0 
     for t in range(Nt):
-        simul_constr[t] = u_exp[t] + u_imp[t] - 1
+        simul_constr[t] = 1 - (u_exp[t] + u_imp[t]) 
    
     Nsc = (Nbat * Nt) # Quantidade de restrições de igualdade de estado de carga
     soc_constr = np.zeros(Nsc) # Vetor de restrições de igualdades do estado de carga (SoC) dos armazenadores
