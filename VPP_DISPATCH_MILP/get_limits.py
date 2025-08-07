@@ -76,7 +76,7 @@ def bounds(data: dict)-> tuple[np.ndarray]:
         demanded_load[t] = np.sum(p_l[:, t]) - np.max(soc_min)
 
     # Definindo a quantidade de variáveis reais (Nr) e inteiras (Ni)
-    Nr =  Nt + Nt + (Nt * Nbm) + (Nt * Nbm) + (Nt * Nbat) + (Nbat * Nt) + (Nt * Nbat) + (Nt * Ndl)
+    Nr = Nt + Nt + (Nt * Nbm) + (Nt * Nbm) + (Nt * Nbat) + (Nbat * Nt) + (Nt * Nbat) + (Nt * Ndl)
     Ni = Nt + Nt + (Nt * Nbm) + (Nt * Nbat) + (Nt * Nbat) + (Nt * Ndl)
 
     # Iniciando os vetores limitadores superior e inferior das variáveis de decisão
@@ -146,7 +146,7 @@ def bounds(data: dict)-> tuple[np.ndarray]:
 # Exemplo de uso
 if __name__ == '__main__':
 
-    from vpp_data import vpp_data
+    from vpp_initial_data import vpp_data
     from decompose_vetor import decompose
     from generator_scenarios import import_scenarios_from_pickle
     from pathlib import Path
@@ -189,17 +189,17 @@ if __name__ == '__main__':
 
 
     # Obtendo as projeções temporais iniciais
-    path = Path(__file__).parent / 'Cenários.pkl'
+    path = Path(__file__).parent / 'scenarios_with_PVGIS.pkl'
     cenarios = import_scenarios_from_pickle(path)
+    idx = np.random.choice(len(cenarios))
+    cenario = cenarios[idx]
 
     # Acrescentando as projeções ao dicionário data
-    for cenario in cenarios:
-
-        data['p_l'] = cenario['p_l']
-        data['p_pv'] = cenario['p_pv']
-        data['p_wt'] = cenario['p_wt']
-        data['p_dl_max'] = cenario['p_dl_max']
-        data['p_dl_min'] = cenario['p_dl_min']
+    data['p_l'] = cenario['p_l']
+    data['p_pv'] = cenario['p_pv']
+    data['p_wt'] = cenario['p_wt']
+    data['p_dl_max'] = cenario['p_dl_ref'] * 1.2
+    data['p_dl_min'] = cenario['p_dl_ref'] * 0.8
 
     # Teste
     upper_bounds, lower_bounds = bounds(data)

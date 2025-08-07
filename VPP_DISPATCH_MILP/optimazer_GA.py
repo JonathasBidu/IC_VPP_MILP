@@ -24,6 +24,7 @@ Config.warnings['not_compiled'] = False
                     - Nbat: Quantidade de armazenadores da VPP;
 
         - Retorna:
+            - res: Objeto com os resultados da otimização (solução ótima, histórico, etc.)
 '''
 
 def solver(data: dict):
@@ -44,8 +45,8 @@ def solver(data: dict):
     # Definindo a quantidade de restrições de igualdade da VPP
     Npbc = Nt # quantidade de restrições de igualdade do balanço de potência da VPP
     Nsimc = Nt # Quantidade de restrição igualdade de simultaneidade VPP
-    Nsc = (Nbat * Nt) # Quantidade restrições de igualdade do estado de carga dos armazenadores da VPP
-    c_eq = Npbc + Nsimc + Nsc # Total de restrições de igualdade da VPP
+    Nsoc = (Nbat * Nt) # Quantidade restrições de igualdade do estado de carga dos armazenadores da VPP
+    c_eq = Npbc + Nsimc + Nsoc # Total de restrições de igualdade da VPP 
 
     # Definindo a quantidade de restrições de desigualdades da VPP
     Nimpc = Nt # Quantidade de restrições de desigualdade de importação da VPP
@@ -53,7 +54,7 @@ def solver(data: dict):
     Nbmc = (Nbm * Nt) + (Nbm * Nt) + (Nbm * Nt) + (Nbm * (Nt - 1)) + (Nbm * (Nt - 1)) # Quantidade de restrições de desigualdade da VPP
     Nbatc = (Nbat * Nt) + (Nbat * Nt) + (Nbat * Nt) # Quantidade de restrições de desigualdade dos armazenadores da VPP
     Ndlc = (Ndl * Nt) + (Ndl * Nt) # Quantidade de restrições de desigualdade das cargas despacháveis da VPP
-    c_ieq = Nimpc + Nexpc + Nbmc + Nbatc + Ndlc # Total de restrições de desigualdade da VPP
+    c_ieq =  Nbmc # Total de restrições de desigualdade da VPP 
 
     # Obtendo os limites superior (ub) e inferior (lb) das variáveis de decisão
     ub, lb = bounds(data)
@@ -67,39 +68,55 @@ def solver(data: dict):
 
         def _evaluate(self, x, out, *args, **kwargs):
 
-            # xr = x[0: Nr]
-            # xi = x[Nr: Ni]
-            # xi = np.float64(xi > 0.5)
-            # x = np.concatenate((xr, xi))
+            xr = x[0: Nr]
+            xi = x[Nr: Nr + Ni]
+            xi = np.float64(xi > 0.5) # Binarizando
+            x = np.concatenate((xr, xi)) # Reagrupando
 
-            out['F'] = - obj_function(x, self.data)
-            out['G'] = ieq_constr(x, self.data)
-            out['H'] = eq_constr(x, self.data)
+            out['F'] = - obj_function(x, self.data) # Maximização
+            out['G'] = ieq_constr(x, self.data) # Inequality Constraints
+            # out['H'] = eq_constr(x, self.data) # Equality Constraints
 
     # Instanciando a classe problema
     problem = MyProblem(data,
                         n_obj = 1,
                         n_var = nvars,
-                        n_eq_constr = c_eq,
+                        # n_eq_constr = c_eq,
                         n_ieq_constr = c_ieq,
                         xu = ub,
                         xl = lb
                         )
-    
+    from pymoo.operators.crossover.sbx import SimulatedBinaryCrossover
+    from pymoo.operators.mutation.pm import PolynomialMutation
+    from pymoo.operators.sampling.lhs import LatinHypercubeSampling
+    from pymoo.operators.selection.rnd import RandomSelection
+
+    crossover = SimulatedBinaryCrossover(prob_var = 0.75, eta = 15, prob_bin = 0.35, prob_exch = 0.9, n_offsprings = 1)
+    mutation = PolynomialMutation(prob = 0.15, eta = 20)
+    sampling = LatinHypercubeSampling()
+    selection = RandomSelection()
+
     # Definindo o algoritmo 
-    algorithm = GA(pop_size = 500)
-    termination = ('n_gen', 100)
+    algorithm = GA(
+        pop_size = 250,
+        crossover = crossover,
+        mutation = mutation,
+        eliminate_duplicates = True,
+        # sampling = sampling,
+        selection = selection 
+        )
+    termination = ('n_gen', 200)
 
     # Obtendo a solução
-    # res = minimize(problem, algorithm, termination, verbose = True, seed = 1)
+    res = minimize(problem, algorithm, termination, verbose = True, seed = 1)
 
     # MODELO FEITO COM PENALIDADES NAS RESTRIÇÕES
-    from pymoo.constraints.as_penalty import ConstraintsAsPenalty
-    from pymoo.core.evaluator import Evaluator
-    from pymoo.core.individual import Individual
+    # from pymoo.constraints.as_penalty import ConstraintsAsPenalty
+    # from pymoo.core.evaluator import Evaluator
+    # from pymoo.core.individual import Individual
 
-    res = minimize(ConstraintsAsPenalty(problem, penalty = 100.0), algorithm, termination, seed = 1, verbose = True)
-    res = Evaluator().eval(problem, Individual(X = res.X))
+    # res = minimize(ConstraintsAsPenalty(problem, penalty = 100.0), algorithm, termination, seed = 1, verbose = True)
+    # res = Evaluator().eval(problem, Individual(X = res.X))
 
     # print("\nFunção Objetivo:", res.F)
     # print("\nViolação de desigualdade (G):", res.G)

@@ -59,11 +59,11 @@ def ieq_constr(x: np.ndarray, data: dict)-> np.ndarray[np.ndarray]:
     Nbat = data['Nbat'] # Quantidade de armazenadores 
     # Mimp = data['Mimp'] # Constante de importação
     # Mexp = data['Mexp'] # Constante de esportação
-    M = 10 # Valor provisório de Mimp e Mexp
+    M = 100 # Valor provisório de Mimp e Mexp
     Mimp = M # Provisório
     Mexp = M # Provisório
     alpha_bm = data['kappa_bm'] # Variáveis de custo das UBTMs
-    beta_bm = [0.0, 0.0] # Provisório
+    beta_bm = data['kappa_bm_start'] #[0.0, 0.0, 0.0] # Provisório
     p_bm_min = data['p_bm_min'] # Potênica Mínima das UBTMs
     p_bm_max = data['p_bm_max'] # Potênca máxima das UBTMs
     p_bm_rup = data['p_bm_rup'] # Potência de rampa de subida das UBTMs
@@ -74,12 +74,6 @@ def ieq_constr(x: np.ndarray, data: dict)-> np.ndarray[np.ndarray]:
 
     # Decompondo a população inicial em variáveis de decisão para teste
     p_exp, p_imp, p_bm, gamma_bm, p_chg, p_dch, soc, p_dl, u_exp, u_imp, u_bm, u_chg, u_dch, u_dl = decompose(x, data)
-
-    u_exp = np.float64(u_exp > 0.5)
-    u_imp = np.float64(u_imp > 0.5)
-    u_chg = np.float64(u_chg > 0.5)
-    u_dch = np.float64(u_dch > 0.5)
-    u_dl = np.float64(u_dl > 0.5)
     
     Nimpc = Nt # Quantidade de restrições de desigaualdade de importação
     imp_constr = np.zeros(Nimpc) # Vetor de restrições de desigualdade de importação da VPP (imp_constr - import constraints)
@@ -91,7 +85,7 @@ def ieq_constr(x: np.ndarray, data: dict)-> np.ndarray[np.ndarray]:
     exp_constr = np.zeros(Nexpc) # Vetor de restrições de desigualdade de expportação da VPP (exp_constr - export constraints)
     # Calculando as restrições de desigualdade de exportação da VPP: p_exp[t] - (1- u_imp[t]) * Mexp <= 0
     for t in range(Nt):
-        exp_constr[t] = p_exp[t] - (1- u_imp[t]) * Mexp
+        exp_constr[t] = p_exp[t] - (1 - u_imp[t]) * Mexp
     
     Nbmc = (Nbm * Nt) + (Nbm * Nt) + (Nbm * Nt) + (Nbm * (Nt - 1)) + (Nbm * (Nt - 1)) # Quantidade de restrições de desigualdade das UBTMs
     bm_constr = np.zeros(Nbmc) # Vetor de restrições de desigualdade das UBTMs (bm_constraints)
@@ -117,10 +111,10 @@ def ieq_constr(x: np.ndarray, data: dict)-> np.ndarray[np.ndarray]:
     # Calculando a potência subida das UBTMs: p_bm[i, t] - p_bm[i, t - 1] - p_bm_rup[i] <= 0
     for t in range(1, Nt):
         for i in range(Nbm):
-            bm_constr[k] = p_bm[i, t] - p_bm[i, t - 1] * p_bm_rup[i]
+            bm_constr[k] = p_bm[i, t] - p_bm[i, t - 1] - p_bm_rup[i]
             k += 1
 
-    # Calculando a potência descida das UBTMs: p_bm[i, t - 1] - p_bm[i, t] - p_bm_rdonw[i] >= 0
+    # Calculando a potência descida das UBTMs: p_bm[i, t - 1] - p_bm[i, t] - p_bm_rdonw[i] <= 0
     for t in range(1, Nt):
         for i in range(Nbm):
             bm_constr[k] =  p_bm[i, t - 1] - p_bm[i, t] - p_bm_rdown[i]
@@ -150,35 +144,36 @@ def ieq_constr(x: np.ndarray, data: dict)-> np.ndarray[np.ndarray]:
     Ndlc = (Ndl * Nt) + (Ndl * Nt) # Quantidade de restrições de desigualdade das cargas despacháveis
     dl_constr = np.zeros(Ndlc) # Vetor de restrições de desigualdade das cargas despacháveis (dl_constr - dload constraints)
     k = 0
-    # Calculando as restrições de potência mínima das cargas despacháveis: p_dl_min[i, t] * u_dl[i, t] - p_dl[i, t] <= 0
-    for t in range(Nt):
-        for i in range(Ndl):
-            dl_constr[k] = p_dl_min[i, t] * u_dl[i, t] - p_dl[i, t]
-            k += 1
-
     # Calculando as restrições de potência máxima das cargas despacháveis: p_dl[i, t] - p_dl_max[i, t] * u_dl[i, t] <= 0
-    for t in range(Nt):
-        for i in range(Ndl):
+    for i in range(Ndl):
+        for t in range(Nt):
             dl_constr[k] = p_dl[i, t] - p_dl_max[i, t] * u_dl[i, t]
             k += 1
 
-    # Vetor com todas as restrições de desigualdade da VPP
-    c_ieq = np.concatenate((imp_constr,
-                                 exp_constr,
-                                 bm_constr,
-                                 bat_constr,
-                                 dl_constr
-                                 ))
+    # Calculando as restrições de potência mínima das cargas despacháveis: p_dl_min[i, t] * u_dl[i, t] - p_dl[i, t] <= 0
+    for i in range(Ndl):
+        for t in range(Nt):
+            dl_constr[k] = p_dl_min[i, t] * u_dl[i, t] - p_dl[i, t]
+            k += 1
 
-    return c_ieq
+    # # Vetor com todas as restrições de desigualdade da VPP
+    # c_ieq = np.concatenate((imp_constr,
+    #                              exp_constr,
+    #                              bm_constr,
+    #                              bat_constr,
+    #                              dl_constr
+    #                              ))
+
+    # return c_ieq
+    return bm_constr
 
 # Exemplo de uso
 if __name__ == '__main__':
 
-    from decompose_vetor import decompose
     from generator_scenarios import import_scenarios_from_pickle
+    from decompose_vetor import decompose
+    from vpp_initial_data import vpp_data
     from pathlib import Path
-    from vpp_data import vpp_data
 
     # Obtendo as projeões inicias
     data = vpp_data()
@@ -198,17 +193,17 @@ if __name__ == '__main__':
     x = np.random.rand(Nr + Ni)
 
     # Obtendo as projeções a partir de cenários gerados anteriormente
-    path = Path(__file__).parent / 'Cenários.pkl'
+    path = Path(__file__).parent / 'scenarios_with_PVGIS.pkl'
     cenarios = import_scenarios_from_pickle(path)
+    idx = np.random.choice(len(cenarios))
+    cenario = cenarios[idx]
 
     # Acrescentando as projeções iniciais ao dicionário data
-    for cenario in cenarios:
-
-        data['p_l'] = cenario['p_l']
-        data['p_pv'] = cenario['p_pv']
-        data['p_wt'] = cenario['p_wt']
-        data['p_dl_max'] = cenario['p_dl_max']
-        data['p_dl_min'] = cenario['p_dl_min']
+    data['p_l'] = cenario['p_l']
+    data['p_pv'] = cenario['p_pv']
+    data['p_wt'] = cenario['p_wt']
+    data['p_dl_max'] = cenario['p_dl_ref'] * 1.2
+    data['p_dl_min'] = cenario['p_dl_ref'] * 0.8
 
     # Teste
     constr = ieq_constr(x, data)

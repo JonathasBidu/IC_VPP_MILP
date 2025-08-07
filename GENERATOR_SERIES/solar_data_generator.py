@@ -3,10 +3,25 @@ import numpy as np
 import pandas as pd
 from PVGenPwr import PVGenPwr
 
-# Obtendo o caminho do arquivo das séries históricas de irradiância e temperatura
-path = Path(__file__).parent / 'BASE_DE_DADOS' / 'solar_hourly_series.xlsx'
+"""
+    Script de Geração e Visualização de Séries de Potência Fotovoltaica
 
-# Definindo o horizonte horário
+    Este script:
+        1. Lê dados de irradiância (W/m²) e temperatura (°C) de um arquivo Excel para várias localidades.
+        2. Gera séries sintéticas de potência usando um modelo simplificado de painel fotovoltaico.
+        3. Salva os resultados por localidade em um novo arquivo Excel.
+        4. Exibe um gráfico de 24 horas com uma série aleatória para cada localidade.
+
+    Requisitos:
+        - Um módulo chamado `PVGenPwr` com a função `Pmmp, Vmmp, Immp = PVGenPwr(G, T, Np, Ns)`
+        - Arquivo de entrada: `DATA_BASE/solar_hourly_series.xlsx` com colunas: [Irradiância, Temperatura]
+"""
+
+
+# Caminho do arquivo Excel com as séries climáticas
+path = Path(__file__).parent / 'DATA_BASE' / 'solar_hourly_series.xlsx'
+
+# Definindo o horizonte de Previsão (Npoints)
 while True:
     Npoints = input('Insira o intervalo em horas desejado ou tecle enter para 168 horas(1 semana): ')
     if Npoints == '':
@@ -47,7 +62,7 @@ Ns = 2000
 sheets = pd.ExcelFile(path)
 
 # Criando o writer para o arquivo de saída
-save_path = Path(__file__).parent.parent / 'SERIES_GERADAS' / 'PVsystem_hourly_series.xlsx'
+save_path = Path(__file__).parent.parent / 'GENERATED_SERIES' / 'PVsystem_hourly_series.xlsx'
 
 with pd.ExcelWriter(save_path) as writer:
 
@@ -61,6 +76,7 @@ with pd.ExcelWriter(save_path) as writer:
         irradiance_hourly_series = np.zeros((n, Npoints))
         temperature_hourly_series = np.zeros((n, Npoints))
 
+        # Extração das séries em blocos
         for i in range(n):
             inicio = Npoints * i
             fim = Npoints * (i+1)
@@ -69,6 +85,7 @@ with pd.ExcelWriter(save_path) as writer:
 
         PVpwr_irradiance_hourly_series = np.zeros_like(irradiance_hourly_series)
 
+        # Cálculo da potência via modelo PVGenPwr
         for s in range(n):
             for time in range(Npoints):
                 T = temperature_hourly_series[s, time] + 273.15  # graus Kelvin
@@ -81,12 +98,14 @@ with pd.ExcelWriter(save_path) as writer:
         PVpwr_hourly_series_pd = pd.DataFrame(PVpwr_irradiance_hourly_series)
         PVpwr_hourly_series_pd.to_excel(writer, sheet_name = sheet, index = False, header = None)
 
+print("\nSéries geradas e exportadas com sucesso!")
+
 # Teste de uso
 if __name__ == '__main__':
 
     import matplotlib.pyplot as plt
 
-    path = Path(__file__).parent.parent / 'SERIES_GERADAS' / 'PVsystem_hourly_series.xlsx'
+    path = Path(__file__).parent.parent / 'GENERATED_SERIES' / 'PVsystem_hourly_series.xlsx'
 
     sheets = pd.ExcelFile(path)
   
@@ -98,9 +117,9 @@ if __name__ == '__main__':
 
         plt.title('PVsystem')
         plt.plot(PVpwr_irradiance_hourly_series[idx, 0:24])
-        plt.legend(['Búzios', 'Niterói', 'Angra dos Reis'])
+        plt.legend(['Angra dos Reis', 'Niterói', 'Búzios', 'Itaocara'])
         plt.xlabel('Hora')
         plt.ylabel('Carga')
 
     plt.show()
-
+    

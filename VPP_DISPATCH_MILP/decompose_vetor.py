@@ -76,7 +76,7 @@ def decompose(x: np.ndarray, data: dict)-> tuple[np.ndarray]:
     end =  Nt
     p_exp = xr[begin: end]
 
-    # Obtenção da potência de exportação (p_imp)
+    # Obtenção da potência de importação (p_imp)
     begin = end
     end = end + Nt
     p_imp = xr[begin: end]
@@ -85,37 +85,37 @@ def decompose(x: np.ndarray, data: dict)-> tuple[np.ndarray]:
     begin = end
     end = end + (Nt * Nbm)
     p_bm = xr[begin: end]
-    p_bm = p_bm.reshape((Nbm, Nt)) # Ajustando a dimensão da de p_bm para (Nbm, Nt)
+    p_bm = p_bm.reshape((Nbm, Nt)) # Ajustando a dimensão de p_bm para (Nbm, Nt)
 
     # Obtenção da variável de decisão gamma_bm (custo da biomassa)
     begin = end
     end = end + (Nt * Nbm)
     gamma_bm = xr[begin: end]
-    gamma_bm = gamma_bm.reshape((Nbm, Nt)) # Ajustando a dimensão da de p_bm para (Nbm, Nt)
+    gamma_bm = gamma_bm.reshape((Nbm, Nt)) # Ajustando a dimensão de gamma para (Nbm, Nt)
 
     # Obtenção da variável de decisão p_chg (potência de carregamento dos armazenadores)
     begin = end
     end = end + (Nt * Nbat)
     p_chg = xr[begin: end]
-    p_chg = p_chg.reshape((Nbat, Nt)) # Ajustando a dimensão da de p_bm para (Nbm, Nt)
+    p_chg = p_chg.reshape((Nbat, Nt)) # Ajustando a dimensão de p_dch para (Nbat, Nt)
 
     # Obtenção da variável de decisão p_dch (potência de descarregamento dos armazenadores)
     begin = end
     end = end + (Nt * Nbat)
     p_dch = xr[begin: end]
-    p_dch = p_dch.reshape((Nbat, Nt)) # Ajustando a dimensão da de p_bm para (Nbm, Nt)
+    p_dch = p_dch.reshape((Nbat, Nt)) # Ajustando a dimensão de p_chg para (Nbat, Nt)
 
     # Obtenção da variável de decisão soc (State of Charge - Estado de Carga)
     begin = end
     end = end + (Nt * Nbat)
     soc = xr[begin: end]
-    soc = soc.reshape((Nbat, Nt)) # Ajustando a dimensão da de p_bm para (Nbm, Nt)
+    soc = soc.reshape((Nbat, Nt)) # Ajustando a dimensão de soc para (Nbat, Nt)
 
     # Obtenção da variável de decisão p_dl (potência das cargas despacháveis)
     begin = end
     end = end + (Nt * Ndl)
     p_dl = xr[begin: end]
-    p_dl = p_dl.reshape((Ndl, Nt)) # Ajustando a dimensão da de p_bm para (Nbm, Nt)
+    p_dl = p_dl.reshape((Ndl, Nt)) # Ajustando a dimensão de p_dl para (Ndl, Nt)
 
     # Obtenção da variável de estado de exportação (u_exp), onde: (0 = desligado e 1 ligado)
     begin = 0
@@ -162,7 +162,7 @@ def decompose(x: np.ndarray, data: dict)-> tuple[np.ndarray]:
 # Exemplo de uso
 if __name__ == '__main__':
 
-    from vpp_data import vpp_data
+    from vpp_initial_data import vpp_data
 
     # Obtendo os parâmetros iniciais
     data = vpp_data()

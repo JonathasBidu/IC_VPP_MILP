@@ -50,21 +50,15 @@ def eq_constr(x: np.ndarray, data: dict)-> np.ndarray:
 
     # Variáveis de decisão:
     p_exp, p_imp, p_bm, gamma_bm, p_chg, p_dch, soc, p_dl, u_exp, u_imp, u_bm, u_chg, u_dch, u_dl = decompose(x, data)
-
-    u_exp = np.float64(u_exp > 0.5)
-    u_imp = np.float64(u_imp > 0.5)
-    u_chg = np.float64(u_chg > 0.5)
-    u_dch = np.float64(u_dch > 0.5)
-    u_dl = np.float64(u_dl > 0.5)
     
     Npbc = Nt # Quantidade de restrições de igualdade de balanço de potência
     pwr_blc_constr = np.zeros(Npbc) # Vetor de restrição de igualdade do balanço de potência da VPP (pwr_blc_contr - power balance constraints)
     # Calculando as restrições de balanço de potência:
     for t in range(Nt):
-        pwr_blc_constr[t] = (- p_exp[t] +
+        pwr_blc_constr[t] = (p_exp[t] +
                       np.sum(p_wt[:, t]) +
                       np.sum(p_pv[:, t]) +
-                      np.sum(p_bm[:, t]) +
+                      np.sum(p_bm[:, t]) -
                       p_imp[t] - 
                       np.sum(p_l[:, t]) -
                       np.sum(p_dl[:, t]) -
@@ -75,10 +69,10 @@ def eq_constr(x: np.ndarray, data: dict)-> np.ndarray:
     simul_constr = np.zeros(Nsimc) # Vetor de restrições de igualdades de simultaneidade do estado de impotação/exportação (simul_constr - simultaneity constraints)
     # Calculando as restrições de simultaneidade em cada instante t no período da simulação Nt: u_exp[t] + u_imp[t] - 1 = 0 
     for t in range(Nt):
-        simul_constr[t] = 1 - (u_exp[t] + u_imp[t]) 
+        simul_constr[t] = u_exp[t] + u_imp[t] - 1 
    
-    Nsc = (Nbat * Nt) # Quantidade de restrições de igualdade de estado de carga
-    soc_constr = np.zeros(Nsc) # Vetor de restrições de igualdades do estado de carga (SoC) dos armazenadores
+    Nsoc = (Nbat * Nt) # Quantidade de restrições de igualdade de estado de carga
+    soc_constr = np.zeros(Nsoc) # Vetor de restrições de igualdades do estado de carga (SoC) dos armazenadores
     k = 0
     for t in range(1, Nt): 
         for i in range(Nbat):
@@ -86,14 +80,14 @@ def eq_constr(x: np.ndarray, data: dict)-> np.ndarray:
             k += 1
 
     # Vetor com todas as restrições de igualdade da VPP
-    c_eq = np.concatenate((pwr_blc_constr, simul_constr, soc_constr))
+    c_eq = np.concatenate((pwr_blc_constr, simul_constr, soc_constr))   
 
     return c_eq
-
+  
 # exemplos de uso
 if __name__ == '__main__':
 
-    from vpp_data import vpp_data
+    from vpp_initial_data import vpp_data
     from decompose_vetor import decompose
     from generator_scenarios import import_scenarios_from_pickle
     from pathlib import Path
@@ -113,16 +107,14 @@ if __name__ == '__main__':
     Ni = Nt + Nt + (Nt * Nbm) + (Nt * Nbat) + (Nbat * Nt) + (Ndl * Nt)
     x = np.random.rand(Nr + Ni)
 
-
-    path = Path(__file__).parent / 'Cenários.pkl'
+    path = Path(__file__).parent / 'scenarios_with_PVGIS.pkl'
     cenarios = import_scenarios_from_pickle(path)
+    idx = np.random.choice(len(cenarios))
+    cenario = cenarios[idx]
 
-    for cenario in cenarios:
-
-        data['p_l'] = cenario['p_l']
-        data['p_pv'] = cenario['p_pv']
-        data['p_wt'] = cenario['p_wt']
-    
+    data['p_pv'] = cenario['p_pv']
+    data['p_wt'] = cenario['p_wt']
+    data['p_l'] = cenario['p_l']
 
     eq = eq_constr(x, data)
 

@@ -71,12 +71,6 @@ def obj_function(x: np.ndarray, data: dict)-> np.float64:
     # Decompondo o vetor x em variáveis de decisão
     p_exp, p_imp, p_bm, gamma_bm, p_chg, p_dch, soc, p_dl, u_exp, u_imp, u_bm, u_chg, u_dch, u_dl = decompose(x, data)
 
-    # u_exp = np.float64(u_exp > 0.5)
-    # u_imp = np.float64(u_imp > 0.5)
-    # u_chg = np.float64(u_chg > 0.5)
-    # u_dch = np.float64(u_dch > 0.5)
-    # u_dl = np.float64(u_dl > 0.5)
-
     # Cálculo de receita gerada pela VPP (R) em cada instante de tempo t no período Nt da simulação
     R = 0
     for t in range(Nt):
@@ -89,7 +83,6 @@ def obj_function(x: np.ndarray, data: dict)-> np.float64:
 
     # Variável de custo das UBTMs
     Cbm = 0
-
     # Cálculo do custo operacional das UBTMs
     for t in range(Nt):
         for i in range(Nbm):
@@ -102,15 +95,13 @@ def obj_function(x: np.ndarray, data: dict)-> np.float64:
 
     # Variável de custo dos armazenadores
     Cbat = 0
-
     # Cálculo do custo operacional dos armazenadores
     for t in range(Nt):
         for i in range(Nbat):
-            Cbat += (p_chg[i, t] - p_dch[i, t]) * kappa_bat[i]
+            Cbat += (p_chg[i, t] + p_dch[i, t]) * kappa_bat[i]
 
     # Variável de custo de corte de carga
     Cdl = 0
-
     # Cálculo da compensação de corte da VPP
     for t in range(Nt):
         for i in range(Ndl):
@@ -118,7 +109,6 @@ def obj_function(x: np.ndarray, data: dict)-> np.float64:
 
     # Variável de custo das usinas EOs
     Cwt = 0
-
     # Cálculo do custo operacional das usinas EOs
     for t in range(Nt):
         for i in range(Nwt):
@@ -126,7 +116,6 @@ def obj_function(x: np.ndarray, data: dict)-> np.float64:
 
     # Variável de custo das usinas FVs
     Cpv = 0
-
     # Cálculo do custo operacional das usinas FVs
     for t in range(Nt):
         for i in range(Npv):
@@ -144,7 +133,7 @@ def obj_function(x: np.ndarray, data: dict)-> np.float64:
 # Exemplo de uso
 if __name__ == '__main__':
 
-    from vpp_data import vpp_data
+    from vpp_initial_data import vpp_data
     from decompose_vetor import decompose
     from generator_scenarios import import_scenarios_from_pickle
     from pathlib import Path
@@ -168,18 +157,17 @@ if __name__ == '__main__':
     x = np.random.rand(Nr + Ni)
 
     # Obtendo as projeções temporais iniciais a partir de um cenário gerado anteriormente
-    path = Path(__file__).parent / 'Cenários.pkl'
+    path = Path(__file__).parent / 'scenarios_with_PVGIS.pkl'
     cenarios = import_scenarios_from_pickle(path)
+    idx = np.random.choice(len(cenarios))
+    cenario = cenarios[idx]
 
-    # Acrescentando as projeções ao dicionário data
-    for cenario in cenarios:
-
-        data['p_l'] = cenario['p_l']
-        data['p_pv'] = cenario['p_pv']
-        data['p_wt'] = cenario['p_wt']
-        data['tau_pld'] = cenario['tau_pld']
-        data['tau_dist'] = cenario['tau_dist']
-        data['tau_dl'] = cenario['tau_dl']
+    data['p_l'] = cenario['p_l']
+    data['p_pv'] = cenario['p_pv']
+    data['p_wt'] = cenario['p_wt']
+    data['tau_pld'] = cenario['tau_pld']
+    data['tau_dist'] = cenario['tau_dist']
+    data['tau_dl'] = cenario['tau_dl']
 
     # Teste
     fval = obj_function(x, data)
